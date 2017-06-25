@@ -70,6 +70,11 @@ def millerRabinUnitTest(n, b = 2):
 # @Arg2 -> Quantidade de bases para testar (padrão = 10).
 # @Return -> False se composto ou True se PseudoPrimo.
 def millerRabinMultiTest(n, bases = 10):
+    assert(n >= 2)
+
+    if bases > n:
+        b = bases - n
+    
     usedBases = []
     for i in range(2, 10):
         b = randint(2, n-1)
@@ -216,8 +221,8 @@ def Teste2():
 
 def Teste3():
     
-#    message = "Hoje eu vou foder aquele JC! Tu vai ver, ele ta fodido, Borel! Tu vai
-    message = "Marcelle S2"
+    message = "Hoje eu vou foder aquele JC! Tu vai ver, ele ta fodido, Borel! Tu vai ver!"
+#    message = "Marcelle S2"
 
     print "Mensagem:"
     print message
@@ -230,7 +235,7 @@ def Teste3():
 
     print ""
     
-    n, e, d = keysRSA(89, 137)
+    n, e, d = keysRSA(generatePossiblePrime(), generatePossiblePrime())
     encryptedMessage = []
     for i in codedMessage:
         encryptedMessage.append(encryptionRSA(i, n, e))
@@ -251,13 +256,6 @@ def Teste3():
     print "Mensagem decodificada"
     print encodedMessage
 
-Teste3()  
-
-
-<<<<<<< Updated upstream
-=======
-Teste2()
-
 def u(n):
     elements = []
     for element in range(1, n):
@@ -265,9 +263,104 @@ def u(n):
             elements.append(element)
     return elements
 
-def gaussToGetPrimitiveRoot(p):
-    
+# Método que verifica se é primo
+def isPrime(n):
+    for i in range(2, n):
+        if n % i == 0:
+            return False
+    return True
 
-def keysElGamal(p):
+def findNextPrime(n):
+    n+=1
+    while True:
+        if isPrime(n):
+            return n;
+        n = n + 1
+
+def factorization(n):
+    factors = []
+    prime = 2
+    while n != 1:
+        if n % prime == 0:
+            factors.append(prime)
+            n/=prime
+        else:
+            prime = findNextPrime(prime)
+    return factors
+
+# Algoritmo de Gauss
+def gauss(p):
+    fList = factorization(p-1)
+    fSet = set(fList)
+    pLessOne = p-1
     
->>>>>>> Stashed changes
+    g = 1
+    for qi in fSet:
+        a = 2 
+        while pow(a, pLessOne/qi) % p == 1:
+            a = a + 1
+        h = pow (a, (pLessOne / pow (qi, fList.count(qi))), p)
+        g = h*g % p
+    return g
+
+def keysElGamal():
+    p = generatePossiblePrime(16)
+    g = gauss(p)
+    d = randint(2, p-2)
+    c = pow(g, d, p)
+    print ""
+    return p, g, c, d
+
+def encryptionElGamal(toEncrypt, p, g, c):
+    k = randint(2, p-2)
+    s = pow(g, k, p)
+    t = (toEncrypt * pow(c,k)) % p
+    return (s, t)
+
+def decryptionElGamal(toDecrypt, p, d): #toDecrypt = (s, t)
+    s = pow(getInverse(toDecrypt[0], p), d , p)
+    return s * toDecrypt[1] % p
+
+def Teste4():
+    print factorization(36)
+
+def Teste5():
+    
+#    message = "Hoje eu vou foder aquele JC! Tu vai ver, ele ta fodido, Borel! Tu vai ver!"
+    message = "celle"
+    
+    print "Mensagem:"
+    print message
+
+    print ""
+    
+    print "Mensagem codificada"
+    codedMessage = precoding(message)
+    print codedMessage
+
+    print ""
+    
+    p, g, c, d = keysElGamal()
+    print "Chaves obtidas"
+    encryptedMessage = []
+    for i in codedMessage:
+        encryptedMessage.append(encryptionElGamal(i, p, g, c))
+    print "Mensagem criptografada com ElGamal"
+    print encryptedMessage
+
+    print ""
+
+    decryptedMessage = []
+    for i in encryptedMessage:
+        decryptedMessage.append(decryptionElGamal(i, p, d))
+    print "Mensagem descriptografada"
+    print decryptedMessage
+
+    print ""
+
+    encodedMessage = poscoding(decryptedMessage)
+    print "Mensagem decodificada"
+    print encodedMessage
+
+Teste5()
+        
