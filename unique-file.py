@@ -254,3 +254,20 @@ def Teste3():
 Teste3()  
 
 
+<<<<<<< Updated upstream
+=======
+Teste2()
+
+def u(n):
+    elements = []
+    for element in range(1, n):
+        if hasInverse(element, n):
+            elements.append(element)
+    return elements
+
+def gaussToGetPrimitiveRoot(p):
+    
+
+def keysElGamal(p):
+    
+>>>>>>> Stashed changes
