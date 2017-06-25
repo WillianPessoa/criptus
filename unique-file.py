@@ -303,16 +303,30 @@ def gauss(p):
         g = h*g % p
     return g
 
+# Gerando um P, onde não necessito do algoritmo de Gauss para obter G. 
+def generatePrimeAndGeneratorToElGamal(bits = 255):
+    q = getrandbits(bits) 
+    while True:
+        while not millerRabinMultiTest(q):
+            q = getrandbits(bits)
+        p = 2*q + 1
+        if millerRabinMultiTest(p):
+            break
+        q = getrandbits(bits)
+    g = 2
+    while pow(g, q, p) == 1:
+        g = g + 1
+    return p, g
+
 def keysElGamal():
-    p = generatePossiblePrime(16)
-    g = gauss(p)
+    p, g = generatePrimeAndGeneratorToElGamal()
     d = randint(2, p-2)
     c = pow(g, d, p)
-    print ""
     return p, g, c, d
 
 def encryptionElGamal(toEncrypt, p, g, c):
-    k = randint(2, p-2)
+    print "Calculando k..."
+    k = randint(2, 100) # Explicar isso
     s = pow(g, k, p)
     t = (toEncrypt * pow(c,k)) % p
     return (s, t)
@@ -326,8 +340,8 @@ def Teste4():
 
 def Teste5():
     
-#    message = "Hoje eu vou foder aquele JC! Tu vai ver, ele ta fodido, Borel! Tu vai ver!"
-    message = "celle"
+    message = "Hoje eu vou foder aquele JC! Tu vai ver, ele ta fodido, Borel! Tu vai ver!"
+#    message = "c"
     
     print "Mensagem:"
     print message
@@ -342,6 +356,11 @@ def Teste5():
     
     p, g, c, d = keysElGamal()
     print "Chaves obtidas"
+    print ("p", p)
+    print ("g", g)
+    print ("c", c)
+    print ("d", d)
+    print ""
     encryptedMessage = []
     for i in codedMessage:
         encryptedMessage.append(encryptionElGamal(i, p, g, c))
