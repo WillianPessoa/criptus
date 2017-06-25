@@ -149,7 +149,7 @@ def getKeyD(e, fiN):
 # @Brief Calcula os valores da chave pública (n, e) e privada(n, d) 
 # @Arg1 -> Primo de 128 bits de tamanho.
 # @Arg2 -> Primo de 128 bits de tamanho.
-# @Return -> Retorna os alores da chave pública (n, e) e prívada (n,d)
+# @Return -> Retorna os valores da chave pública (n, e) e prívada (n,d)
 #            na ordem n, e, d.
 def keysRSA(p, q):
     n = p * q
@@ -157,6 +157,47 @@ def keysRSA(p, q):
     e = getKeyE(fiN)
     d = getKeyD(e, fiN)
     return n, e, d
+
+# @Brief Encripta um bloco de bytes utilizando o RSA.
+# @Arg1 -> Bloco, em bytes, a ser encriptado.
+# @Arg2 -> Primeiro componente da chave pública (n)
+# @Arg3 -> Segundo componente da chave pública (e)
+# @Return -> Retorna o bloco de bytes encriptado.
+# TODO: Enquanto o método de leitura de bytes de um arquivo não é feito,
+#       o método trabalhará com um número inteiro para encriptar pela
+#       questão dos testes.
+def encryptionRSA(toEncrypt, n, e):
+    return pow(toEncrypt, e, n)
+
+# @Brief Decripta um bloco de bytes utilizando o RSA.
+# @Arg1 -> Bloco, em bytes, a ser decriptado.
+# @Arg2 -> Primeiro componente da chave privada (n)
+# @Arg3 -> Segundo componente da chave privada (d)
+# @Return -> Retorna o bloco de bytes decriptado.
+# TODO: Enquanto o método de leitura de bytes de um arquivo não é feito,
+#       o método trabalhará com um número inteiro para encriptar pela
+#       questão dos testes.
+def decryptionRSA(toDecrypt, n, d):
+    return pow(toDecrypt, d, n)
+
+# @Brief Pré-codifica a mensagem/arquivo para encriptação.
+# @Arg1 -> Mensagem/arquivo não pré-codificado.
+# @Return -> Mensagem/arquivo pré-codificado como lista de pedaços do arquivo/mensagem.
+def precoding(toCode):
+    blocks = []
+    for i in toCode:
+        blocks.append(ord(i))
+    return blocks
+
+# @Brief Decodifica mensagem após decriptação.
+# @Arg1 -> Mensagem/arquivo pré-codificado.
+# @Return -> Mensagem/arquivo decodificado no formato original.    
+def poscoding(toDecode):
+    decoded = ""
+    for i in toDecode:
+        decoded = decoded + chr(i)
+    return decoded
+    
 
 def Teste1(): 
     start_time = time.time()
@@ -170,6 +211,46 @@ def Teste1():
 
 
 def Teste2():
-    keysRSA(generatePossiblePrime(),generatePossiblePrime())
+    keysRSA(83,87)
 
-Teste2()
+
+def Teste3():
+    
+#    message = "Hoje eu vou foder aquele JC! Tu vai ver, ele ta fodido, Borel! Tu vai
+    message = "Marcelle S2"
+
+    print "Mensagem:"
+    print message
+
+    print ""
+    
+    print "Mensagem codificada"
+    codedMessage = precoding(message)
+    print codedMessage
+
+    print ""
+    
+    n, e, d = keysRSA(89, 137)
+    encryptedMessage = []
+    for i in codedMessage:
+        encryptedMessage.append(encryptionRSA(i, n, e))
+    print "Mensagem criptografada com RSA"
+    print encryptedMessage
+
+    print ""
+
+    decryptedMessage = []
+    for i in encryptedMessage:
+        decryptedMessage.append(decryptionRSA(i, n, d))
+    print "Mensagem descriptografada"
+    print decryptedMessage
+
+    print ""
+
+    encodedMessage = poscoding(decryptedMessage)
+    print "Mensagem decodificada"
+    print encodedMessage
+
+Teste3()  
+
+
