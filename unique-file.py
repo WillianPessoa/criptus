@@ -263,7 +263,8 @@ def u(n):
             elements.append(element)
     return elements
 
-# Método que verifica se é primo
+# TODO remover e fazer com que o método de fatorização verifique se é primo
+#      pelo método de Miller Rabin.
 def isPrime(n):
     for i in range(2, n):
         if n % i == 0:
@@ -293,7 +294,6 @@ def gauss(p):
     fList = factorization(p-1)
     fSet = set(fList)
     pLessOne = p-1
-    
     g = 1
     for qi in fSet:
         a = 2 
@@ -303,20 +303,55 @@ def gauss(p):
         g = h*g % p
     return g
 
+# @Brief Gera um primp P e o gerador G para o método El Gamal.
+# @Arg1 -> tamanho do número Q que gerará P e G, sem fazer uso
+#          do método de Gauss.
+# @Return -> Retorna um Primo P e um gerador G. 
+def generatePrimeAndGeneratorToElGamal(bits = 255):
+    q = getrandbits(bits) 
+    while True:
+        while not millerRabinMultiTest(q):
+            q = getrandbits(bits)
+        p = 2*q + 1
+        if millerRabinMultiTest(p):
+            break
+        q = getrandbits(bits)
+    g = 2
+    while pow(g, q, p) == 1:
+        g = g + 1
+    return p, g
+# @Brief Gera todas as chaves necessárias para o método El Gamal.
+# @Return -> Retorna chaves para o método El Gamal.  
 def keysElGamal():
-    p = generatePossiblePrime(16)
-    g = gauss(p)
+    p, g = generatePrimeAndGeneratorToElGamal()
     d = randint(2, p-2)
     c = pow(g, d, p)
-    print ""
     return p, g, c, d
 
+# @Brief Encripta um bloco de bytes utilizando o El Gamal.
+# @Arg1 -> Bloco, em bytes, a ser encriptado.
+# @Arg2 -> Primeiro componente da chave pública (p).
+# @Arg3 -> Segundo componente da chave pública (g).
+# @Arg4 -> Terceiro componente da chave pública (c).
+# @Return -> Retorna o bloco de bytes encriptado.
+# TODO: Enquanto o método de leitura de bytes de um arquivo não é feito,
+#       o método trabalhará com um número inteiro para encriptar pela
+#       questão dos testes.
 def encryptionElGamal(toEncrypt, p, g, c):
-    k = randint(2, p-2)
+    print "Calculando k..."
+    k = randint(2, 100) # Explicar isso
     s = pow(g, k, p)
     t = (toEncrypt * pow(c,k)) % p
     return (s, t)
 
+# @Brief Decripta um bloco de bytes utilizando o El Gamal.
+# @Arg1 -> Bloco (s,t) a ser decriptado.
+# @Arg2 -> Primo para decodificação (p)
+# @Arg3 -> Componente da chave privada para decriptação (d)
+# @Return -> Retorna o bloco de bytes decriptado.
+# TODO: Enquanto o método de leitura de bytes de um arquivo não é feito,
+#       o método trabalhará com um número inteiro para encriptar pela
+#       questão dos testes.
 def decryptionElGamal(toDecrypt, p, d): #toDecrypt = (s, t)
     s = pow(getInverse(toDecrypt[0], p), d , p)
     return s * toDecrypt[1] % p
@@ -326,8 +361,8 @@ def Teste4():
 
 def Teste5():
     
-#    message = "Hoje eu vou foder aquele JC! Tu vai ver, ele ta fodido, Borel! Tu vai ver!"
-    message = "celle"
+    message = "Hoje eu vou foder aquele JC! Tu vai ver, ele ta fodido, Borel! Tu vai ver!"
+#    message = "c"
     
     print "Mensagem:"
     print message
@@ -342,6 +377,11 @@ def Teste5():
     
     p, g, c, d = keysElGamal()
     print "Chaves obtidas"
+    print ("p", p)
+    print ("g", g)
+    print ("c", c)
+    print ("d", d)
+    print ""
     encryptedMessage = []
     for i in codedMessage:
         encryptedMessage.append(encryptionElGamal(i, p, g, c))
