@@ -19,6 +19,7 @@ debug = True
 
 from random import getrandbits
 from random import randint
+from hashlib import sha224
 import math
 
 import time
@@ -41,7 +42,7 @@ def expMod(number, exp, mod, rest = 1):
         else:
             exp = exp / 2
         number = (number * number) % mod
-        modExpStepByStep(number, exp, mod, rest)
+        expMod(number, exp, mod, rest)
 
 
 # @Brief Teste de Miller Rabin. Verifica se o número inteiro n
@@ -263,7 +264,8 @@ def u(n):
             elements.append(element)
     return elements
 
-# Método que verifica se é primo
+# TODO remover e fazer com que o método de fatorização verifique se é primo
+#      pelo método de Miller Rabin.
 def isPrime(n):
     for i in range(2, n):
         if n % i == 0:
@@ -293,7 +295,6 @@ def gauss(p):
     fList = factorization(p-1)
     fSet = set(fList)
     pLessOne = p-1
-    
     g = 1
     for qi in fSet:
         a = 2 
@@ -303,7 +304,10 @@ def gauss(p):
         g = h*g % p
     return g
 
-# Gerando um P, onde não necessito do algoritmo de Gauss para obter G. 
+# @Brief Gera um primp P e o gerador G para o método El Gamal.
+# @Arg1 -> tamanho do número Q que gerará P e G, sem fazer uso
+#          do método de Gauss.
+# @Return -> Retorna um Primo P e um gerador G. 
 def generatePrimeAndGeneratorToElGamal(bits = 255):
     q = getrandbits(bits) 
     while True:
@@ -318,12 +322,23 @@ def generatePrimeAndGeneratorToElGamal(bits = 255):
         g = g + 1
     return p, g
 
+# @Brief Gera todas as chaves necessárias para o método El Gamal.
+# @Return -> Retorna chaves para o método El Gamal.  
 def keysElGamal():
     p, g = generatePrimeAndGeneratorToElGamal()
     d = randint(2, p-2)
     c = pow(g, d, p)
     return p, g, c, d
 
+# @Brief Encripta um bloco de bytes utilizando o El Gamal.
+# @Arg1 -> Bloco, em bytes, a ser encriptado.
+# @Arg2 -> Primeiro componente da chave pública (p).
+# @Arg3 -> Segundo componente da chave pública (g).
+# @Arg4 -> Terceiro componente da chave pública (c).
+# @Return -> Retorna o bloco de bytes encriptado.
+# TODO: Enquanto o método de leitura de bytes de um arquivo não é feito,
+#       o método trabalhará com um número inteiro para encriptar pela
+#       questão dos testes.
 def encryptionElGamal(toEncrypt, p, g, c):
     print "Calculando k..."
     k = randint(2, 100) # Explicar isso
@@ -331,6 +346,14 @@ def encryptionElGamal(toEncrypt, p, g, c):
     t = (toEncrypt * pow(c,k)) % p
     return (s, t)
 
+# @Brief Decripta um bloco de bytes utilizando o El Gamal.
+# @Arg1 -> Bloco (s,t) a ser decriptado.
+# @Arg2 -> Primo para decodificação (p)
+# @Arg3 -> Componente da chave privada para decriptação (d)
+# @Return -> Retorna o bloco de bytes decriptado.
+# TODO: Enquanto o método de leitura de bytes de um arquivo não é feito,
+#       o método trabalhará com um número inteiro para encriptar pela
+#       questão dos testes.
 def decryptionElGamal(toDecrypt, p, d): #toDecrypt = (s, t)
     s = pow(getInverse(toDecrypt[0], p), d , p)
     return s * toDecrypt[1] % p
@@ -381,5 +404,53 @@ def Teste5():
     print "Mensagem decodificada"
     print encodedMessage
 
-Teste5()
+def keysDigitalSignatureElGamal():
+    p, g = generatePrimeAndGeneratorToElGamal()
+    a = randint(2, p-2)
+    v = pow(g, a, p)
+    return p, g, a, v
+
+def digitalSignatureElGamal(p, g, a, message):
+    k = randint(2, p-2)
+    while not hasInverse(k, p-1):
+        k = randint(2,p-2)
+    r = pow(g, k, p)
+    s = (getInverse(k, p-1) * int(sha224(message).hexdigest(), 16)) % p-1
+    return (r,s) 
+
+def checkDigitalSignatureElGamal(p, g, v, message, digitalSignature):
+    r = digitalSignature[0]
+    s = digitalSignature[1]
+    if not r >= 1 and r <= p-1:
+        return False
+    u1 = ( pow(v, r, p)*pow(r, s, p) ) % p
+    u2 = pow(g, int(sha224(message).hexdigest(), 16), p)
+    if u1 != u2:
+        return False
+    return True
+    
+
+def Teste6():
+
+    message = "Marcelle"
+    
+    print "Gerando chaves..."
+    p, g, a, v = keysDigitalSignatureElGamal()
+
+    print "Criando assinatura digital..."
+    digitalSignature = digitalSignatureElGamal(p, g, a, message)
+
+    print "Testando a assinatura digital com os valores verdadeiros..."
+    result = checkDigitalSignatureElGamal(p, g, v, message, digitalSignature)
+    if result:
+        print "Deu certo!"
+    else:
+        print "Deu errado"
+        
+    print "Testando a assinatura digital com os valores falsos..."
+
+
+    
+Teste6()
+    
         
