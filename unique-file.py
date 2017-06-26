@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-
-debug = True
+#!/usr/bin/python
 
 # *********************************************************
 # *                                                       *
@@ -21,6 +20,7 @@ from random import getrandbits
 from random import randint
 from hashlib import sha224
 import math
+import sys
 
 import time
 
@@ -450,7 +450,63 @@ def Teste6():
     print "Testando a assinatura digital com os valores falsos..."
 
 
+# Principais métodos
+
+def encryption(encryptionMethod, fileToEncrypt):
+    something = 0
+
+def decryption(encryptionMethod, fileToDecrypt):
+    something = 0
+
+def signatureFile(signatureMethod):
+    something = 0
+
+def encryptionAndSignatureFile(encryptionMethod, fileToEncrypt):
+    something = 0
+
+def decryptionAndSignatureCheck(encryptionMethod, fileToDecrypt):
+    something = 0
+
+def identifyEncryptionMethod(arg):
+    if arg == "rsa" or arg == "elgamal":
+        return arg
+    else:
+        return "desconhecido"
     
-Teste6()
-    
+# Passing args to a list and removing fist element (name of this file)
+args = list(sys.argv)
+args.remove(args[0])
+
+allDone = False
+
+i = 0
+while not allDone:
+    if args[i] == "unieque-file.py":
+        i += 1
+    elif args[i] == "--encrypt":
+        i += 1
+        encryptionMethod = identifyEncryptionMethod(args[i])
+        print "Modo de encriptação %s" % (encryptionMethod)
+        if encryptionMethod == "desconhecido":
+           break
+        else:
+            i += 1
+            fileToEncrypt = open(args[i], "rb")
+            print "Encripitando o arquivo %s" % (fileToEncrypt.name)
+            encryption(encryptionMethod, fileToEncrypt)
+            allDone = True
+    elif args[i] == "--decrypt":
+        i += 1
+        print "Modo de encriptação %s"
+        break
+    elif args[i] == "--sign":
+        i += 1
+        print "assinatura digital"
+        break
+    elif "--combinados":
+        i += 1
+        print "assinatura digital"
+        break
+if allDone ==  False:
+    print "O programa será encerrado por falta de argumentos"
         

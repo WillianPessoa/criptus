@@ -1,0 +1,5 @@
+echo "Teste[1]
+    Criptografia RSA
+    Commando: python unique-file.py --encrypt rsa toencript.txt
+    "
+python unique-file.py --encrypt rsa toencrypt.txt
