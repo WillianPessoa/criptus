@@ -2,4 +2,9 @@ echo "Teste[1]
     Criptografia RSA
     Commando: python unique-file.py --encrypt rsa toencript.txt
     "
+echo "Criptografando arquivo
+    "
 python unique-file.py --encrypt rsa toencrypt.txt
+echo "Descriptografando arquivo
+    "
+python unique-file.py --decrypt rsa Etoencrypt.txt

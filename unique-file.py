@@ -449,14 +449,59 @@ def Teste6():
         
     print "Testando a assinatura digital com os valores falsos..."
 
+def file_split(f, delim='-', bufsize=1024):
+    prev = ''
+    while True:
+        s = f.read(bufsize)
+        if not s:
+            break
+        split = s.split(delim)
+        if len(split) > 1:
+            yield prev + split[0]
+            prev = split[-1]
+            for x in split[1:-1]:
+                yield x
+        else:
+            prev += s
+    if prev:
+        yield prev
 
 # Principais métodos
 
 def encryption(encryptionMethod, fileToEncrypt):
-    something = 0
+    
+    fileEncrypted = open( "E" + fileToEncrypt.name.replace(".*", ""), "w")
+
+    byte = fileToEncrypt.read(1)
+    byteEncripted = 0
+
+    n, e, d = keysRSA(generatePossiblePrime(), generatePossiblePrime())
+
+    print ""
+    print "Chaves criptográficas:"
+    print "\tn = %d" % (n)
+    print "\te = %d" % (e)
+    print "\td = %d" % (d)
+    
+    while byte != "":
+        #print(byte, '{0:08b}'.format(ord(byte)), ord(byte))
+        byteEncrypted = encryptionRSA(ord(byte), n, e)
+        #print (long(byteEncrypted), '{0:08b}'.format(byteEncrypted))
+        #print ""
+        fileEncrypted.write("%ld" % long(byteEncrypted))
+        fileEncrypted.write("-")
+        byte = fileToEncrypt.read(1)
 
 def decryption(encryptionMethod, fileToDecrypt):
-    something = 0
+    fileDecrypted = open( "D" + fileToDecrypt, "wb")
+
+    print "Insira as chave descriptográfica n:"
+    n = input()
+    print "insira a chave descriptográfica d:"
+    d = input()
+
+    for i in file_split(open(fileToDecrypt)):
+        print chr(decryptionRSA(int(i), n, d))
 
 def signatureFile(signatureMethod):
     something = 0
@@ -489,16 +534,22 @@ while not allDone:
         print "Modo de encriptação %s" % (encryptionMethod)
         if encryptionMethod == "desconhecido":
            break
-        else:
-            i += 1
-            fileToEncrypt = open(args[i], "rb")
-            print "Encripitando o arquivo %s" % (fileToEncrypt.name)
-            encryption(encryptionMethod, fileToEncrypt)
-            allDone = True
+        i += 1
+        fileToEncrypt = open(args[i], "rb")
+        print "Encripitando o arquivo %s" % (fileToEncrypt.name)
+        encryption(encryptionMethod, fileToEncrypt)
+        allDone = True
     elif args[i] == "--decrypt":
         i += 1
-        print "Modo de encriptação %s"
-        break
+        decryptionMethod = identifyEncryptionMethod(args[i])
+        print "Modo de encriptação %s" % decryptionMethod
+        if decryptionMethod == "desconhecido":
+            break
+        i += 1
+        fileToDecrypt = args[i]
+        print "Decripitando o arquivo %s" % (fileToDecrypt)
+        decryption(decryptionMethod, fileToDecrypt)
+        allDone = True
     elif args[i] == "--sign":
         i += 1
         print "assinatura digital"
