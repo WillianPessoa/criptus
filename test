@@ -1,10 +1,23 @@
+rm DE* E*
 echo "Teste[1]
-    Criptografia RSA
-    Commando: python unique-file.py --encrypt rsa toencript.txt
+    Criptografia RSA - Criptografando o arquvio gravida.jpg com o RSA
+    Commando: python unique-file.py --encrypt rsa gravida.jpg
     "
 echo "Criptografando arquivo
     "
-python unique-file.py --encrypt rsa toencrypt.txt
+python unique-file.py --encrypt rsa gravida.jpg
 echo "Descriptografando arquivo
+    Commando: python unique-file.py --decrypt rsa Egravida.jpg
     "
-python unique-file.py --decrypt rsa Etoencrypt.txt
+python unique-file.py --decrypt rsa Egravida.jpg
+echo "Teste[2]
+    Criptografia El Gamal - Criptografando o arquivo maxresdefault.jpg com o El Gamal
+    Commando: python unique-file.py --encrypt elgamal maxresdefault.jpg
+    "
+echo "Criptografando o arquivo...
+    "
+python unique-file.py --encrypt elgamal maxresdefault.jpg
+echo "Descriptografando arquivo
+    Commando: python unique-file.py --decrypt elgamal maxresdefault.jpg
+    "
+python unique-file.py --decrypt elgamal Emaxresdefault.jpg

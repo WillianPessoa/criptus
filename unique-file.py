@@ -340,8 +340,7 @@ def keysElGamal():
 #       o método trabalhará com um número inteiro para encriptar pela
 #       questão dos testes.
 def encryptionElGamal(toEncrypt, p, g, c):
-    print "Calculando k..."
-    k = randint(2, 100) # Explicar isso
+    k = randint(2, 10) # Explicar isso
     s = pow(g, k, p)
     t = (toEncrypt * pow(c,k)) % p
     return (s, t)
@@ -411,9 +410,9 @@ def keysDigitalSignatureElGamal():
     return p, g, a, v
 
 def digitalSignatureElGamal(p, g, a, message):
-    k = randint(2, p-2)
+    k = randint(2, 100)
     while not hasInverse(k, p-1):
-        k = randint(2,p-2)
+        k = randint(2, 100)
     r = pow(g, k, p)
     s = (getInverse(k, p-1) * int(sha224(message).hexdigest(), 16)) % p-1
     return (r,s) 
@@ -469,39 +468,59 @@ def file_split(f, delim='-', bufsize=1024):
 # Principais métodos
 
 def encryption(encryptionMethod, fileToEncrypt):
-    
     fileEncrypted = open( "E" + fileToEncrypt.name.replace(".*", ""), "w")
-
-    byte = fileToEncrypt.read(1)
-    byteEncripted = 0
-
-    n, e, d = keysRSA(generatePossiblePrime(), generatePossiblePrime())
-
-    print ""
-    print "Chaves criptográficas:"
-    print "\tn = %d" % (n)
-    print "\te = %d" % (e)
-    print "\td = %d" % (d)
-    
-    while byte != "":
-        #print(byte, '{0:08b}'.format(ord(byte)), ord(byte))
-        byteEncrypted = encryptionRSA(ord(byte), n, e)
-        #print (long(byteEncrypted), '{0:08b}'.format(byteEncrypted))
-        #print ""
-        fileEncrypted.write("%ld" % long(byteEncrypted))
-        fileEncrypted.write("-")
+    if encryptionMethod == "rsa":
+        n, e, d = keysRSA(generatePossiblePrime(), generatePossiblePrime())
+        print ""
+        print "Chaves criptográficas:"
+        print "\tn = %d" % (n)
+        print "\te = %d" % (e)
+        print "\td = %d" % (d)
         byte = fileToEncrypt.read(1)
+        byteEncripted = 0
+        while byte != "":
+            byteEncrypted = encryptionRSA(ord(byte), n, e)
+            fileEncrypted.write("%ld" % long(byteEncrypted))
+            fileEncrypted.write("-")
+            byte = fileToEncrypt.read(1)
+    elif encryptionMethod == "elgamal":
+        p, g, c, d = keysElGamal()
+        print ""
+        print "Chaves criptográficas:"
+        print "\tp = %d" % (p)
+        print "\tg = %d" % (g)
+        print "\tc = %d" % (c)
+        print "\td = %d" % (d)
+        byte = fileToEncrypt.read(1)
+        byteEncripted = 0
+        while byte != "":
+            byteEncrypted = encryptionElGamal(ord(byte), p, g, c)
+            fileEncrypted.write("%ld" % long(byteEncrypted[0]))
+            fileEncrypted.write("|")
+            fileEncrypted.write("%ld" % long(byteEncrypted[1]))
+            fileEncrypted.write("-")
+            byte = fileToEncrypt.read(1)
 
-def decryption(encryptionMethod, fileToDecrypt):
+def decryption(decryptionMethod, fileToDecrypt):
     fileDecrypted = open( "D" + fileToDecrypt, "wb")
-
-    print "Insira as chave descriptográfica n:"
-    n = input()
-    print "insira a chave descriptográfica d:"
-    d = input()
-
-    for i in file_split(open(fileToDecrypt)):
-        print chr(decryptionRSA(int(i), n, d))
+    if decryptionMethod == "rsa":
+        print "Insira as chave decriptográfica n:"
+        n = input()
+        print "insira a chave decriptográfica d:"
+        d = input()
+        for i in file_split(open(fileToDecrypt)):
+            fileDecrypted.write(chr(decryptionRSA(int(i), n, d)))
+    elif decryptionMethod == "elgamal":
+        print "Insira a chave decriptográfica p:"
+        p = input()
+        print "insira a chave decriptográfica d:"
+        d = input()
+        for i in file_split(open(fileToDecrypt)):
+            itupled = i.split("|")
+            it = []
+            it.append(int(itupled[0]))
+            it.append(int(itupled[1]))
+            fileDecrypted.write(chr(decryptionElGamal(it, p, d)))
 
 def signatureFile(signatureMethod):
     something = 0
@@ -531,24 +550,26 @@ while not allDone:
     elif args[i] == "--encrypt":
         i += 1
         encryptionMethod = identifyEncryptionMethod(args[i])
-        print "Modo de encriptação %s" % (encryptionMethod)
+        print "==> Encriptação utilizando o método %s\n" % (encryptionMethod)
         if encryptionMethod == "desconhecido":
            break
         i += 1
         fileToEncrypt = open(args[i], "rb")
         print "Encripitando o arquivo %s" % (fileToEncrypt.name)
         encryption(encryptionMethod, fileToEncrypt)
+        print "\nArquivo encriptado\n"
         allDone = True
     elif args[i] == "--decrypt":
         i += 1
         decryptionMethod = identifyEncryptionMethod(args[i])
-        print "Modo de encriptação %s" % decryptionMethod
+        print "==> Decriptação utilizando o método %s\n" % decryptionMethod
         if decryptionMethod == "desconhecido":
             break
         i += 1
         fileToDecrypt = args[i]
-        print "Decripitando o arquivo %s" % (fileToDecrypt)
+        print "Decripitando o arquivo %s\n" % (fileToDecrypt)
         decryption(decryptionMethod, fileToDecrypt)
+        print "\nArquivo decriptado\n"
         allDone = True
     elif args[i] == "--sign":
         i += 1
