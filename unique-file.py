@@ -26,8 +26,7 @@ def expMod(b,e,m):
         else:
             e = (e-1)/2
             rest = (rest*b) % m
-        b = b % m
-        b *= b
+        b = (b*b) % m
     return rest
 
 # @Brief MDC
@@ -299,18 +298,17 @@ def decryptionElGamal(toDecrypt, p, d): #toDecrypt = (s, t)
 def signature(filename, p, g, a):
 
     #Encontrando um K que possua inverso módulo p-1
-    k = randint(2,p-1)
-    while not hasInverse(k, p-1):
-        k = randint(2,0-1)
+    k = randint(2,p-2)
+    while mdc(k, p-1) != 1:
+        k = randint(2,p-2)
 
     #Calculando o inverso de K
     ki = getInverse(k, p-1)
-
+    
+    arq = open(filename, 'rb')
     # Pegando o hash da mensagem em formato hexadecimal...
-    content = readAllFile(filename)
-    h = sha224(content).hexdigest()
-    # ... e convertendo em inteiro
-    h = int(h, 16)
+    content = arq.read()
+    h = int(sha224(content).hexdigest(), 16)
 
     # Calculando R
     r = expMod(g, k, p)
@@ -331,26 +329,28 @@ def checkSignature(filename, signature, p, g, v):
     # Verificando se R está entre 1 e p-1
     if r < 1 or r > p-1:
         return False
-
+    
+    arq = open(filename, 'rb')
     # Pegando o hash da mensagem em formato hexadecimal...
-    content = readAllFile(filename)
-    h = sha224(content).hexdigest()
-    # ... e convertendo em inteiro
-    h = int(h, 16)
-
+    content = arq.read()
+    h = int(sha224(content).hexdigest(), 16)
 
     # Calculando u1 e u2
     # No livro o cálculo possui a seguinte forma:
     # ( pow(v,r) * pow(r,s) ) % p
     # Mas dessa forma o programa "voa"
+    print ("p", p)
+    print ("v", v)
+    print ("r", r)
+    print ("s", s)
+    print ("h", h)
     u1 = (expMod(v, r, p) * expMod(r, s, p)) % p
     u2 = expMod(g, h, p)
 
     print ("u1", u1)
     print ("u2", u2)
 
-    # Verificando u1 e u2 são diferentes
-    # 
+    # Verificando u1 e u2 são diferentes 
     if u1 != u2:
         return False
 
@@ -487,11 +487,13 @@ def signatureFile(filename, method):
             print "\nNome do arquivo contendo o par da assinatura é %s" % (digSignFile.name)
         print "\nAssinatura concluída"
     else:
-        if makeQuestion("Gostaria de ditar as chaves em vez de selecionar o arquivo?"):
-            print "Insira a chave decriptográfica p:"
+        if makeQuestion("Gostaria de digitar as chaves em vez de selecionar o arquivo?"):
+            print "Insira a chave de assinatura p:"
             p = int(convertToDec(raw_input()))
-            print "insira a chave decriptográfica d:"
-            d = int(onvertToDec(raw_input()))    
+            print "insira a chave de assinatura g:"
+            g = int(convertToDec(raw_input()))
+            print "insira a chave de assinatura v:"
+            v = int(convertToDec(raw_input()))		    
         else:
             print "\nPor favor, insira o nome do arquivo"
             keysFile = raw_input()
@@ -503,16 +505,16 @@ def signatureFile(filename, method):
             assert(len(keys) == 4)
             p = keys[0]
             g = keys[1]
-            a = keys[3]
-            print "\nChaves decriptográficas encontras:"
+            v = keys[2]
+            print "\nChaves de assinatura encontradas:"
             print "\tp = %s" % convertToHex(p)
             print "\tg = %s" % convertToHex(g)
-            print "\ta = %s" % convertToHex(a)
+            print "\tv = %s" % convertToHex(v)
         if makeQuestion("Gostaria de digitar os pares de assinatura em vez de selecionar o arquivo?"):
             print "Insira o primeiro componente do par da assinatura r:"
             r = int(convertToDec(raw_input()))
             print "insira o segundo componente do par de assinatura s:"
-            s = int(onvertToDec(raw_input()))
+            s = int(convertToDec(raw_input()))
         else:
             print "\nPor favor, insira o nome do arquivo"
             keysFile = raw_input()
@@ -528,7 +530,7 @@ def signatureFile(filename, method):
             print "\tr = %s" % convertToHex(r)
             print "\ts = %s" % convertToHex(s)
         print "\nIniciando validação de assinatura"
-        if checkSignature(filename, (r,s), p, g, a):
+        if checkSignature(filename, (r,s), p, g, v):
             print "\nAssinatura válida!"
         else:
             print "\nAssinatura inválida!"
@@ -608,7 +610,7 @@ def menuBash():
             method = args[i]
             print method
             task = identifyDigSignTask(args[i])
-            if task == "deconhecida":
+            if task == "desconhecida":
                 break
             i+=1
             filename = args[i]
