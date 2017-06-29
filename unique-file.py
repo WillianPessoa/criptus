@@ -10,7 +10,6 @@ import os
 import math
 import sys
 
-
 # ============================================ Funções ============================================  #
 
 # @Brief Exponenciação modular
@@ -297,61 +296,66 @@ def decryptionElGamal(toDecrypt, p, d): #toDecrypt = (s, t)
 
 # =========================================== Signature ===========================================  #
 
-def leia(primaryF):
-    fileAD = open(primaryF, 'rb')
-    content = fileAD.read()
-    charRead = 0
-    allFText = ''
-    print("Lendo arquivo...")
-    while(charRead < len(content)):
-        block = (ord(content[charRead]))
-        ConvertToBin = lambda x: format(x, 'b')
-        block = ConvertToBin(block)
-        allFText = str(allFText) + str(block)
-        charRead += 1
-    return allFText
+def signature(filename, p, g, a):
 
-def generateDigitalSignatureElGamal(fileToSign, p, g, a):
-    k = randint(2,10) # Explicar isso
+    #Encontrando um K que possua inverso módulo p-1
+    k = randint(2,p-1)
     while not hasInverse(k, p-1):
-        k = randint(2,10)
-    print ("k", k)
-    r = expMod(g, k, p)
-    print ("r", r)
-    ik = getInverse(k,p-1) % p-1
-    print ("ik", ik)
+        k = randint(2,0-1)
 
-    allFText = leia(fileToSign)
-    print ("allFText", allFText)
-    ConvertToBin = lambda x: format(x, 'b')
-    h = sha224(allFText).hexdigest()
-    print ("h", h, type(h))
-    h = int(ConvertToDec(h))
-    print ("h", h, type(h))
-    h = int(ConvertToBin(h))
-    print ("h", h, type(h))
+    #Calculando o inverso de K
+    ki = getInverse(k, p-1)
+
+    # Pegando o hash da mensagem em formato hexadecimal...
+    content = readAllFile(filename)
+    h = sha224(content).hexdigest()
+    # ... e convertendo em inteiro
+    h = int(h, 16)
+
+    # Calculando R
+    r = hexpMod(g, k, p)
+
+    # Calculando S
+    s = (ki * (h - a*r)) % p-1
+
+    # Retornando a assinatura R e S
+    return (r, s)
     
-    s = (ik * (h - (a*r))) % p-1
-    print ("s", s)
-    print ("Am", (r,s))
-    print ""
-    return (r,s)
 
-def checkDigitalSignatureElGamal(fileToSign, signature, p, g, v):
+def checkSignature(filename, signature, p, g, v):
+
+    # Separando as variáveis R e S que estão em Signature
     r = signature[0]
     s = signature[1]
 
+    # Verificando se R está entre 1 e p-1
     if r < 1 or r > p-1:
         return False
 
-    u1 = (expMod(v,r,p) * expMod(r,s,p)) % p
+    # Pegando o hash da mensagem em formato hexadecimal...
+    content = readAllFile(filename)
+    h = sha224(content).hexdigest()
+    # ... e convertendo em inteiro
+    h = int(h, 16)
+
+
+    # Calculando u1 e u2
+    # No livro o cálculo possui a seguinte forma:
+    # ( pow(v,r) * pow(r,s) ) % p
+    # Mas dessa forma o programa "voa"
+    u1 = (expMod(v, r, p) * expMod(r, s, p)) % p
     u2 = expMod(g, h, p)
 
     print ("u1", u1)
     print ("u2", u2)
+
+    # Verificando u1 e u2 são diferentes
+    # 
     if u1 != u2:
         return False
+
     return True
+
     
 
 # ========================================== Main methods =========================================  #
@@ -580,6 +584,17 @@ def testeAD():
     print ("u1",u1)
     print ("u2",u2)
 
-menuBash()
+#menuBash()
 #testeAD()
 #print getKeysFromFile("keys-rsa-Egravida.txt")
+filenameToSign = "toencrypt.txt"
+print "Gerando chaves..."
+p, g, v, a = keysElGamal()
+print ""
+print ("p",p)
+print ("g",g)
+print ("v",v)
+print ("a",a)
+print ""
+sign = signature(filenameToSign, p, g, a)
+print checkSignature(filenameToSign, sign, p, g, v)
