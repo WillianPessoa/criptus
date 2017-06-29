@@ -1,23 +1,45 @@
 rm DE* E*
+echo "====================================================================================
+    "
 echo "Teste[1]
     Criptografia RSA - Criptografando o arquvio gravida.jpg com o RSA
     Commando: python unique-file.py --encrypt rsa gravida.jpg
     "
-echo "Criptografando arquivo
-    "
 python unique-file.py --encrypt rsa gravida.jpg
-echo "Descriptografando arquivo
+echo "====================================================================================
+    "
+echo "Teste[2]
+    Descriptografando o arquivo Egravida.jpg encriptado com o RSA
     Commando: python unique-file.py --decrypt rsa Egravida.jpg
     "
 python unique-file.py --decrypt rsa Egravida.jpg
-echo "Teste[2]
+echo "====================================================================================
+    "
+echo "Teste[3]
     Criptografia El Gamal - Criptografando o arquivo maxresdefault.jpg com o El Gamal
     Commando: python unique-file.py --encrypt elgamal maxresdefault.jpg
     "
-echo "Criptografando o arquivo...
-    "
 python unique-file.py --encrypt elgamal maxresdefault.jpg
-echo "Descriptografando arquivo
+echo "====================================================================================
+    "
+echo Teste[4]
+echo "Descriptografando arquivo Emaxresdefault.jpg com o El Gamal
     Commando: python unique-file.py --decrypt elgamal maxresdefault.jpg
     "
 python unique-file.py --decrypt elgamal Emaxresdefault.jpg
+echo "====================================================================================
+    "
+echo "Teste[5]
+    Criptografia El Gamal - Tentativa de criptografar um arquivo inexistente
+    Commando: python unique-file.py --encrypt elgamal arquivoinexiste
+    "
+python unique-file.py --encrypt elgamal arquivoinexiste
+echo "====================================================================================
+    "
+echo "Teste[6]
+    Criptografia El Gamal - Tentativa de decriptar um arquivo inexistente
+    Commando: python unique-file.py --decrypt elgamal arquivoinexiste
+    "
+python unique-file.py --decrypt elgamal arquivoinexiste
+echo "====================================================================================
+    "

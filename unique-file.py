@@ -4,6 +4,8 @@
 from random import getrandbits
 from random import randint
 from hashlib import sha224
+import os.path
+import os
 import math
 import sys
 
@@ -62,7 +64,7 @@ def millerRabinUnitTest(n, b = 2):
 # @Arg1 -> Número a ser testado.
 # @Arg2 -> Quantidade de bases para testar (padrão = 10).
 # @Return -> False se composto ou True se PseudoPrimo.
-def millerRabinMultiTest(n, bases = 10):
+def millerRabinMultiTest(n, bases = 30):
     assert(n >= 2)
     if bases > n:
         b = bases - n
@@ -132,6 +134,37 @@ def fileSplit(f, delimeter = '-', bufsize = 1024):
             frag += s
     if frag:
         yield frag
+        
+# @Brief Realiza uma leitura completa de um arquivo
+# @Arg1 -> Nome/Caminho do arquivo
+# @Return -> Conteúdo do arquivo
+def realAllFile(path):
+    with open(path, 'rb') as f:
+        return f.read()
+    
+# @Brief Verifica se um arquivo existe
+# @Arg1 -> Nome/Caminho do arquivo
+# @Return -> True ou False
+def isThisFileExists(path):
+    return os.path.isfile(path)
+
+# @Brief Pergunta ao usuário se ele deseja salvar as chaves num arquivo
+# @Return -> True ou False
+def doWantSaveKeysInFile():
+    print ""
+    print "Gostaria de salvar as chaves em um arquivo? (s/n)"
+    ans = raw_input()
+    while not (ans != 's' or ans != 'n'):
+            ans = raw_input()
+    print (ans, type(ans))
+    if ans == 's':
+        return True
+    return False
+
+def changeNameExtensionsToDotKryptos(path):
+    return path.rpartition('.')[0] + ".txt"
+    
+
 
 # ============================================= RSA =============================================  #
 
@@ -228,18 +261,80 @@ def decryptionElGamal(toDecrypt, p, d): #toDecrypt = (s, t)
 
 # =========================================== Signature ===========================================  #
 
+def leia(primaryF):
+    fileAD = open(primaryF, 'rb')
+    content = fileAD.read()
+    charRead = 0
+    allFText = ''
+    print("Lendo arquivo...")
+    while(charRead < len(content)):
+        block = (ord(content[charRead]))
+        ConvertToBin = lambda x: format(x, 'b')
+        block = ConvertToBin(block)
+        allFText = str(allFText) + str(block)
+        charRead += 1
+    return allFText
+
+def generateDigitalSignatureElGamal(fileToSign, p, g, a):
+    k = randint(2,10) # Explicar isso
+    while not hasInverse(k, p-1):
+        k = randint(2,10)
+    print ("k", k)
+    r = expMod(g, k, p)
+    print ("r", r)
+    ik = getInverse(k,p-1) % p-1
+    print ("ik", ik)
+
+    allFText = leia(fileToSign)
+    print ("allFText", allFText)
+    ConvertToBin = lambda x: format(x, 'b')
+    h = sha224(allFText).hexdigest()
+    print ("h", h, type(h))
+    h = int(ConvertToDec(h))
+    print ("h", h, type(h))
+    h = int(ConvertToBin(h))
+    print ("h", h, type(h))
+    
+    s = (ik * (h - (a*r))) % p-1
+    print ("s", s)
+    print ("Am", (r,s))
+    print ""
+    return (r,s)
+
+def checkDigitalSignatureElGamal(fileToSign, signature, p, g, v):
+    r = signature[0]
+    s = signature[1]
+
+    if r < 1 or r > p-1:
+        return False
+
+    u1 = (expMod(v,r,p) * expMod(r,s,p)) % p
+    u2 = expMod(g, h, p)
+
+    print ("u1", u1)
+    print ("u2", u2)
+    if u1 != u2:
+        return False
+    return True
+    
+
 # ========================================== Main methods =========================================  #
 
 def encryption(encryptionMethod, filenameToEncrypt):
     fileToEncrypt = open(filenameToEncrypt, "rb")
-    fileEncrypted = open( "E" + fileToEncrypt.name.replace(".*", ""), "w")
+    fileEncrypted = open( "E" + fileToEncrypt.name, "w")
     if encryptionMethod == "rsa":
         n, e, d = keysRSA(generatePossiblePrime(), generatePossiblePrime())
-        print ""
-        print "Chaves criptográficas:"
+        print "\nChaves criptográficas:"
         print "\tn = %d" % (n)
         print "\te = %d" % (e)
         print "\td = %d" % (d)
+        if doWantSaveKeysInFile():
+            keysFile = open("keys-" + encryptionMethod + "-" + changeNameExtensionsToDotKryptos(fileEncrypted.name), "w")
+            keysFile.write("n - %d\n" % (n))
+            keysFile.write("e = %d\n" % (e))
+            keysFile.write("d = %d\n" % (d))
+            print "\nArquivo salvo com o nome %s" % (keysFile.name)
         byte = fileToEncrypt.read(1)
         byteEncripted = 0
         while byte != "":
@@ -249,12 +344,18 @@ def encryption(encryptionMethod, filenameToEncrypt):
             byte = fileToEncrypt.read(1)
     elif encryptionMethod == "elgamal":
         p, g, c, d = keysElGamal()
-        print ""
-        print "Chaves criptográficas:"
+        print "\nChaves criptográficas:"
         print "\tp = %d" % (p)
         print "\tg = %d" % (g)
         print "\tc = %d" % (c)
         print "\td = %d" % (d)
+        if doWantSaveKeysInFile():
+            keysFile = open("keys-" + encryptionMethod + "-" + changeNameExtensionsToDotKryptos(fileEncrypted.name), "w")
+            keysFile.write("p - %d\n" % (p))
+            keysFile.write("g = %d\n" % (g))
+            keysFile.write("c = %d\n" % (c))
+            keysFile.write("d = %d\n" % (d))
+            print "\nArquivo salvo com o nome %s" % (keysFile.name)
         byte = fileToEncrypt.read(1)
         byteEncripted = 0
         while byte != "":
@@ -324,9 +425,13 @@ def menuBash():
                break
             i += 1
             filenameToEncrypt = args[i]
-            print "Encripitando o arquivo %s" % (filenameToEncrypt)
-            encryption(encryptionMethod, filenameToEncrypt)
-            print "\nArquivo encriptado\n"
+            if isThisFileExists(filenameToEncrypt):
+                print "Encripitando o arquivo %s" % (filenameToEncrypt)
+                encryption(encryptionMethod, filenameToEncrypt)
+                print "\nArquivo encriptado\n"
+            else:
+                print "Arquivo inexistente"
+                break
             allDone = True
 
         # Método de decriptação
@@ -337,10 +442,13 @@ def menuBash():
             if decryptionMethod == "desconhecido":
                 break
             i += 1
-            fileToDecrypt = args[i]
-            print "Decripitando o arquivo %s\n" % (fileToDecrypt)
-            decryption(decryptionMethod, fileToDecrypt)
-            print "\nArquivo decriptado\n"
+            filenameToDecrypt = args[i]
+            if isThisFileExists(filenameToDecrypt):
+                print "Decripitando o arquivo %s\n" % (filenameToDecrypt)
+                decryption(decryptionMethod, filenameToDecrypt)
+                print "\nArquivo decriptado\n"
+            else:
+                print "Aquivo inexistente"
             allDone = True
         
         elif args[i] == "--sign":
@@ -357,5 +465,43 @@ def menuBash():
             break
     if allDone ==  False:
         print "O programa será encerrado por falta de argumentos"
+
+
+def testeAD():
+    message = readAllFile("toencrypt.txt")
+    p, g, v, a = keysElGamal()
+    print ""
+    print ("p",p)
+    print ("g",g)
+    print ("v",v)
+    print ("a",a)
+    print ""
+
+    k = randint(2, 20)
+    while not hasInverse(k, p-1):
+        k = randint(2, 20)
+    ki = getInverse(k, p-1)
+    
+    r = pow(g, k, p)
+
+    h = sha224(message).hexdigest()
+    print ("h", h)
+    h = int(h,16)
+    print ("h", h)
+    print ""
+
+    s = (ki * (h - (a*r))) % p-1
+
+    print (r, s)
+    print ""
+
+    if r < 1 or r > p-1:
+        return False
+
+    u1 = (pow(v,r) * pow(r,s)) % p
+    u2 = pow(g,h,p)
+
+    print ("u1",u1)
+    print ("u2",u2)
 
 menuBash()
