@@ -368,10 +368,14 @@ def encryption(encryptionMethod, filenameToEncrypt):
 def decryption(decryptionMethod, fileToDecrypt):
     fileDecrypted = open( "D" + fileToDecrypt, "wb")
     if decryptionMethod == "rsa":
-        print "Insira as chave decriptográfica n:"
-        n = input()
-        print "insira a chave decriptográfica d:"
-        d = input()
+        if makeQuestion("Gostaria de digitar as chaves em vez de selecionar o arquivo?"):
+            print "Insira as chave decriptográfica n:"
+            n = input()
+            print "insira a chave decriptográfica d:"
+            d = input()
+        else:
+            keysFile = raw_input()
+            something = 0
         for i in fileSplit(open(fileToDecrypt)):
             fileDecrypted.write(chr(decryptionRSA(int(i), n, d)))
     elif decryptionMethod == "elgamal":
