@@ -313,7 +313,7 @@ def signature(filename, p, g, a):
     h = int(h, 16)
 
     # Calculando R
-    r = hexpMod(g, k, p)
+    r = expMod(g, k, p)
 
     # Calculando S
     s = (ki * (h - a*r)) % p-1
@@ -475,6 +475,14 @@ def identifyEncryptionMethod(arg):
     else:
         return "desconhecido"
 
+def identifyDigSignTask(arg):
+    if arg == "check" or arg == "sign":
+        if arg == check:
+            return "validação de assinatura"
+        return "assinatura"
+    else:
+        return "desconhecida"
+
 # ============================================== Menu =============================================  #
 
 def menuBash():
@@ -523,11 +531,24 @@ def menuBash():
             else:
                 print "Aquivo inexistente"
             allDone = True
-        
-        elif args[i] == "--sign":
+
+        # --digsignature sign|check nameofFile
+        elif args[i] == "--digsignature":
             i += 1
-            print "assinatura digital"
-            break
+            task = identifyDigSignTask(args[i])
+            if task == "deconhecida":
+                break
+            i+=1
+            filename = args[i]
+            if isThisFileExists(filenameTo):
+                print "==> Assinatura Digital\n"
+                print "Realizando %s do arquivo %s" % (task, filename)
+                signatureFile(filename)
+                print "\nTarefa conluída"
+            else:
+                print "Aquivo inexistente"
+                break
+            allDone = True
     
         elif "--combinados":
             i += 1
@@ -538,51 +559,6 @@ def menuBash():
             break
     if allDone ==  False:
         print "O programa será encerrado por falta de argumentos"
-
-
-def testeAD():
-    message = readAllFile("toencrypt.txt")
-    p, g, v, a = keysElGamal()
-    print ""
-    print ("p",p)
-    print ("g",g)
-    print ("v",v)
-    print ("a",a)
-    print ""
-
-    k = randint(2, 20)
-    while not hasInverse(k, p-1):
-        k = randint(2, 20)
-    ki = getInverse(k, p-1)
-    print ("ki", ki)
-    
-    r = pow(g, k, p)
-
-    h = sha224(message).hexdigest()
-    print ("h", h)
-    h = int(h,16)
-    print ("h", h)
-    print ""
-
-    ar = a*r
-    print ("ar", ar)
-    har = h - ar
-    print ("har", har)
-    kihar = ki * har
-    print ("kihar", kihar)
-    s = (kihar) % p-1
-
-    print (r, s)
-    print ""
-
-    if r < 1 or r > p-1:
-        return False
-
-    u1 = (pow(v,r,p) * pow(r,s,p)) % p
-    u2 = pow(g,h,p)
-
-    print ("u1",u1)
-    print ("u2",u2)
 
 #menuBash()
 #testeAD()
