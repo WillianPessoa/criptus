@@ -150,13 +150,12 @@ def isThisFileExists(path):
 
 # @Brief Pergunta ao usuário se ele deseja salvar as chaves num arquivo
 # @Return -> True ou False
-def doWantSaveKeysInFile():
+def makeQuestion(message):
     print ""
-    print "Gostaria de salvar as chaves em um arquivo? (s/n)"
+    print message + "(s/n)"
     ans = raw_input()
     while not (ans != 's' or ans != 'n'):
             ans = raw_input()
-    print (ans, type(ans))
     if ans == 's':
         return True
     return False
@@ -329,7 +328,7 @@ def encryption(encryptionMethod, filenameToEncrypt):
         print "\tn = %d" % (n)
         print "\te = %d" % (e)
         print "\td = %d" % (d)
-        if doWantSaveKeysInFile():
+        if makeQuestion("Gostaria de salvar as chaves em um arquivo?"):
             keysFile = open("keys-" + encryptionMethod + "-" + changeNameExtensionsToDotKryptos(fileEncrypted.name), "w")
             keysFile.write("n - %d\n" % (n))
             keysFile.write("e = %d\n" % (e))
@@ -349,7 +348,7 @@ def encryption(encryptionMethod, filenameToEncrypt):
         print "\tg = %d" % (g)
         print "\tc = %d" % (c)
         print "\td = %d" % (d)
-        if doWantSaveKeysInFile():
+        if makeQuestion("Gostaria de salvar as chaves em um arquivo?"):
             keysFile = open("keys-" + encryptionMethod + "-" + changeNameExtensionsToDotKryptos(fileEncrypted.name), "w")
             keysFile.write("p - %d\n" % (p))
             keysFile.write("g = %d\n" % (g))
