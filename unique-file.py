@@ -4,6 +4,7 @@
 from random import getrandbits
 from random import randint
 from hashlib import sha224
+import re
 import os.path
 import os
 import math
@@ -69,7 +70,7 @@ def millerRabinMultiTest(n, bases = 30):
     if bases > n:
         b = bases - n
     usedBases = []
-    for i in range(2, 10):
+    for i in range(0, 10):
         b = randint(2, n-1)
         while (b in usedBases):
             b = randint(2, n-1)
@@ -138,7 +139,7 @@ def fileSplit(f, delimeter = '-', bufsize = 1024):
 # @Brief Realiza uma leitura completa de um arquivo
 # @Arg1 -> Nome/Caminho do arquivo
 # @Return -> Conteúdo do arquivo
-def realAllFile(path):
+def readAllFile(path):
     with open(path, 'rb') as f:
         return f.read()
     
@@ -162,6 +163,14 @@ def makeQuestion(message):
 
 def changeNameExtensionsToDotKryptos(path):
     return path.rpartition('.')[0] + ".txt"
+
+def getKeysFromFile(path):
+    content = readAllFile(path)
+    values = []
+    for i in re.findall(r'\d+', content):
+        values.append(long(i))
+    return values
+    
     
 
 
@@ -374,15 +383,40 @@ def decryption(decryptionMethod, fileToDecrypt):
             print "insira a chave decriptográfica d:"
             d = input()
         else:
+            print "\nPor favor, insira o nome do arquivo"
             keysFile = raw_input()
-            something = 0
+            while not isThisFileExists(keysFile):
+                print "\nArquivo inexistente!"
+                print "Insira o nome correto do arquivo ou apert \"Ctrl + C\" para encerrar o programa"
+                keysFile = raw_input()
+            keys = getKeysFromFile(keysFile)
+            assert(len(keys) == 3)
+            n = keys[0]
+            d = keys[2]
+            print "\nChaves decriptográficas encontras:"
+            print "\tn = %d" % n
+            print "\td = %d" % d
+        print "\nIniciando decriptação"
         for i in fileSplit(open(fileToDecrypt)):
             fileDecrypted.write(chr(decryptionRSA(int(i), n, d)))
     elif decryptionMethod == "elgamal":
-        print "Insira a chave decriptográfica p:"
-        p = input()
-        print "insira a chave decriptográfica d:"
-        d = input()
+        if makeQuestion("Gostaria de digitar as chaves em vez de selecionar o arquivo?"):
+            print "Insira a chave decriptográfica p:"
+            p = input()
+            print "insira a chave decriptográfica d:"
+            d = input()
+        else:
+            print "\nPor favor, insira o nome do arquivo"
+            keysFile = raw_input()
+            while not isThisFileExists(keysFile):
+                print "\nArquivo inexistente!"
+                print "Insira o nome correto do arquivo ou apert \"Ctrl + C\" para encerrar o programa"
+                keysFile = raw_input()
+            keys = getKeysFromFile(keysFile)
+            assert(len(keys) == 4)
+            p = keys[0]
+            d = keys[3]
+        print "\nIniciando decriptação"
         for i in fileSplit(open(fileToDecrypt)):
             itupled = i.split("|")
             it = []
@@ -484,6 +518,7 @@ def testeAD():
     while not hasInverse(k, p-1):
         k = randint(2, 20)
     ki = getInverse(k, p-1)
+    print ("ki", ki)
     
     r = pow(g, k, p)
 
@@ -493,7 +528,13 @@ def testeAD():
     print ("h", h)
     print ""
 
-    s = (ki * (h - (a*r))) % p-1
+    ar = a*r
+    print ("ar", ar)
+    har = h - ar
+    print ("har", har)
+    kihar = ki * har
+    print ("kihar", kihar)
+    s = (kihar) % p-1
 
     print (r, s)
     print ""
@@ -501,10 +542,12 @@ def testeAD():
     if r < 1 or r > p-1:
         return False
 
-    u1 = (pow(v,r) * pow(r,s)) % p
+    u1 = (pow(v,r,p) * pow(r,s,p)) % p
     u2 = pow(g,h,p)
 
     print ("u1",u1)
     print ("u2",u2)
 
 menuBash()
+#testeAD()
+#print getKeysFromFile("keys-rsa-Egravida.txt")
