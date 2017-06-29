@@ -449,7 +449,7 @@ def decryption(decryptionMethod, fileToDecrypt):
             p = keys[0]
             d = keys[3]
             print "\nChaves decriptográficas encontras:"
-            print "\tn = %s" % convertToHex(p)
+            print "\tp = %s" % convertToHex(p)
             print "\td = %s" % convertToHex(d)
         print "\nIniciando decriptação"
         for i in fileSplit(open(fileToDecrypt)):
@@ -460,9 +460,79 @@ def decryption(decryptionMethod, fileToDecrypt):
             fileDecrypted.write(chr(decryptionElGamal(it, p, d)))
     print "\nNome do arquivo %s" % (fileDecrypted.name)
 
-def signatureFile(signatureMethod):
-    something = 0
-
+def signatureFile(filename, method):
+    if method == "sign":
+        print "\nGerando chaves de assinatura..."
+        p, g, v, a = keysElGamal()
+        print "\nChaves de assinagura digital:"
+        print "\tp = %s" % convertToHex(p)
+        print "\tg = %s" % convertToHex(g)
+        print "\tv = %s" % convertToHex(v)
+        print "\ta = %s" % convertToHex(a)
+        if makeQuestion("Gostaria de salvar as chaves em um arquivo?"):
+            keysFile = open("keys-signature-" + changeNameExtensionsToDotKryptos(filename), "w")
+            keysFile.write("p - %s\n" % convertToHex(p))
+            keysFile.write("g = %s\n" % convertToHex(g))
+            keysFile.write("v = %s\n" % convertToHex(v))
+            keysFile.write("a = %s\n" % convertToHex(a))
+            print "\nArquivo salvo com o nome %s" % (keysFile.name)
+        digSign = signature(filename, p, g, a)
+        print "\nA assinatura digital do arquivo %s é o par:"
+        print "r = %s\n" % convertToHex(digSign[0])
+        print "s = %s\n" % convertToHex(digSign[1])
+        if makeQuestion("Gostaria de salvar a assinatura em arquivo?"):
+            digSignFile = open("signature-" + changeNameExtensionsToDotKryptos(filename), "w")
+            digSignFile.write("r = %s\n" % convertToHex(digSign[0]))
+            digSignFile.write("s = %s\n" % convertToHex(digSign[1]))
+            print "\nNome do arquivo contendo o par da assinatura é %s" % (digSignFile.name)
+        print "\nAssinatura concluída"
+    else:
+        if makeQuestion("Gostaria de ditar as chaves em vez de selecionar o arquivo?"):
+            print "Insira a chave decriptográfica p:"
+            p = int(convertToDec(raw_input()))
+            print "insira a chave decriptográfica d:"
+            d = int(onvertToDec(raw_input()))    
+        else:
+            print "\nPor favor, insira o nome do arquivo"
+            keysFile = raw_input()
+            while not isThisFileExists(keysFile):
+                print "\nArquivo inexistente!"
+                print "Insira o nome correto do arquivo ou apert \"Ctrl + C\" para encerrar o programa"
+                keysFile = raw_input()
+            keys = getKeysFromFile(keysFile)
+            assert(len(keys) == 4)
+            p = keys[0]
+            g = keys[1]
+            a = keys[3]
+            print "\nChaves decriptográficas encontras:"
+            print "\tp = %s" % convertToHex(p)
+            print "\tg = %s" % convertToHex(g)
+            print "\ta = %s" % convertToHex(a)
+        if makeQuestion("Gostaria de digitar os pares de assinatura em vez de selecionar o arquivo?"):
+            print "Insira o primeiro componente do par da assinatura r:"
+            r = int(convertToDec(raw_input()))
+            print "insira o segundo componente do par de assinatura s:"
+            s = int(onvertToDec(raw_input()))
+        else:
+            print "\nPor favor, insira o nome do arquivo"
+            keysFile = raw_input()
+            while not isThisFileExists(keysFile):
+                print "\nArquivo inexistente!"
+                print "Insira o nome correto do arquivo ou apert \"Ctrl + C\" para encerrar o programa"
+                keysFile = raw_input()
+            keys = getKeysFromFile(keysFile)
+            assert(len(keys) == 2)
+            r = keys[0]
+            s = keys[1]
+            print "\nPar de assinatura encontrado no arquivo:"
+            print "\tr = %s" % convertToHex(r)
+            print "\ts = %s" % convertToHex(s)
+        print "\nIniciando validação de assinatura"
+        if checkSignature(filename, (r,s), p, g, a):
+            print "\nAssinatura válida!"
+        else:
+            print "\nAssinatura inválida!"
+        
 def encryptionAndSignatureFile(encryptionMethod, fileToEncrypt):
     something = 0
 
@@ -477,7 +547,7 @@ def identifyEncryptionMethod(arg):
 
 def identifyDigSignTask(arg):
     if arg == "check" or arg == "sign":
-        if arg == check:
+        if arg == "check":
             return "validação de assinatura"
         return "assinatura"
     else:
@@ -535,16 +605,17 @@ def menuBash():
         # --digsignature sign|check nameofFile
         elif args[i] == "--digsignature":
             i += 1
+            method = args[i]
+            print method
             task = identifyDigSignTask(args[i])
             if task == "deconhecida":
                 break
             i+=1
             filename = args[i]
-            if isThisFileExists(filenameTo):
+            if isThisFileExists(filename):
                 print "==> Assinatura Digital\n"
                 print "Realizando %s do arquivo %s" % (task, filename)
-                signatureFile(filename)
-                print "\nTarefa conluída"
+                signatureFile(filename, method)
             else:
                 print "Aquivo inexistente"
                 break
@@ -560,17 +631,5 @@ def menuBash():
     if allDone ==  False:
         print "O programa será encerrado por falta de argumentos"
 
-#menuBash()
-#testeAD()
-#print getKeysFromFile("keys-rsa-Egravida.txt")
-filenameToSign = "toencrypt.txt"
-print "Gerando chaves..."
-p, g, v, a = keysElGamal()
-print ""
-print ("p",p)
-print ("g",g)
-print ("v",v)
-print ("a",a)
-print ""
-sign = signature(filenameToSign, p, g, a)
-print checkSignature(filenameToSign, sign, p, g, v)
+menuBash()
+
