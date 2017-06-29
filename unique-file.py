@@ -135,6 +135,33 @@ def fileSplit(f, delimeter = '-', bufsize = 1024):
             frag += s
     if frag:
         yield frag
+
+def convertToHex(decimal):
+    n = (decimal % 16)
+    temp = ""
+    if (n < 10):
+        temp = n
+    if (n == 10):
+        temp = "A"
+    if (n == 11):
+        temp = "B"
+    if (n == 12):
+        temp = "C"
+    if (n == 13):
+        temp = "D"
+    if (n == 14):
+        temp = "E"
+    if (n == 15):
+        temp = "F"
+    if (decimal - n != 0):
+        return convertToHex(decimal / 16) + str(temp)
+    else:
+        return str(temp)
+    
+def convertToDec(hexadecimal):
+	n = hexadecimal
+	result = int(n,16)
+	return str(result)
         
 # @Brief Realiza uma leitura completa de um arquivo
 # @Arg1 -> Nome/Caminho do arquivo
@@ -167,8 +194,9 @@ def changeNameExtensionsToDotKryptos(path):
 def getKeysFromFile(path):
     content = readAllFile(path)
     values = []
-    for i in re.findall(r'\d+', content):
-        values.append(long(i))
+    for i in re.findall(r'\w*[0-9A-F]', content):
+        values.append(int(convertToDec(i)))
+    print values
     return values
     
     
@@ -334,14 +362,14 @@ def encryption(encryptionMethod, filenameToEncrypt):
     if encryptionMethod == "rsa":
         n, e, d = keysRSA(generatePossiblePrime(), generatePossiblePrime())
         print "\nChaves criptográficas:"
-        print "\tn = %d" % (n)
-        print "\te = %d" % (e)
-        print "\td = %d" % (d)
+        print "\tn = %s" % convertToHex(n)
+        print "\te = %s" % convertToHex(e)
+        print "\td = %s" % convertToHex(d)
         if makeQuestion("Gostaria de salvar as chaves em um arquivo?"):
             keysFile = open("keys-" + encryptionMethod + "-" + changeNameExtensionsToDotKryptos(fileEncrypted.name), "w")
-            keysFile.write("n - %d\n" % (n))
-            keysFile.write("e = %d\n" % (e))
-            keysFile.write("d = %d\n" % (d))
+            keysFile.write("n - %s\n" % convertToHex(n))
+            keysFile.write("e = %s\n" % convertToHex(e))
+            keysFile.write("d = %s\n" % convertToHex(d))
             print "\nArquivo salvo com o nome %s" % (keysFile.name)
         byte = fileToEncrypt.read(1)
         byteEncripted = 0
@@ -353,16 +381,16 @@ def encryption(encryptionMethod, filenameToEncrypt):
     elif encryptionMethod == "elgamal":
         p, g, c, d = keysElGamal()
         print "\nChaves criptográficas:"
-        print "\tp = %d" % (p)
-        print "\tg = %d" % (g)
-        print "\tc = %d" % (c)
-        print "\td = %d" % (d)
+        print "\tp = %s" % convertToHex(p)
+        print "\tg = %s" % convertToHex(g)
+        print "\tc = %s" % convertToHex(c)
+        print "\td = %s" % convertToHex(d)
         if makeQuestion("Gostaria de salvar as chaves em um arquivo?"):
             keysFile = open("keys-" + encryptionMethod + "-" + changeNameExtensionsToDotKryptos(fileEncrypted.name), "w")
-            keysFile.write("p - %d\n" % (p))
-            keysFile.write("g = %d\n" % (g))
-            keysFile.write("c = %d\n" % (c))
-            keysFile.write("d = %d\n" % (d))
+            keysFile.write("p - %s\n" % convertToHex(p))
+            keysFile.write("g = %s\n" % convertToHex(g))
+            keysFile.write("c = %s\n" % convertToHex(c))
+            keysFile.write("d = %s\n" % convertToHex(d))
             print "\nArquivo salvo com o nome %s" % (keysFile.name)
         byte = fileToEncrypt.read(1)
         byteEncripted = 0
@@ -378,10 +406,10 @@ def decryption(decryptionMethod, fileToDecrypt):
     fileDecrypted = open( "D" + fileToDecrypt, "wb")
     if decryptionMethod == "rsa":
         if makeQuestion("Gostaria de digitar as chaves em vez de selecionar o arquivo?"):
-            print "Insira as chave decriptográfica n:"
-            n = input()
+            print "Insira a chave decriptográfica n:"
+            n = int(convertToDec(raw_input()))
             print "insira a chave decriptográfica d:"
-            d = input()
+            d = int(convertToDec(raw_input()))
         else:
             print "\nPor favor, insira o nome do arquivo"
             keysFile = raw_input()
@@ -394,17 +422,17 @@ def decryption(decryptionMethod, fileToDecrypt):
             n = keys[0]
             d = keys[2]
             print "\nChaves decriptográficas encontras:"
-            print "\tn = %d" % n
-            print "\td = %d" % d
+            print "\tn = %s" % convertToHex(n)
+            print "\td = %s" % convertToHex(d)
         print "\nIniciando decriptação"
         for i in fileSplit(open(fileToDecrypt)):
             fileDecrypted.write(chr(decryptionRSA(int(i), n, d)))
     elif decryptionMethod == "elgamal":
         if makeQuestion("Gostaria de digitar as chaves em vez de selecionar o arquivo?"):
             print "Insira a chave decriptográfica p:"
-            p = input()
+            p = int(convertToDec(raw_input()))
             print "insira a chave decriptográfica d:"
-            d = input()
+            d = int(onvertToDec(raw_input()))
         else:
             print "\nPor favor, insira o nome do arquivo"
             keysFile = raw_input()
@@ -416,6 +444,9 @@ def decryption(decryptionMethod, fileToDecrypt):
             assert(len(keys) == 4)
             p = keys[0]
             d = keys[3]
+            print "\nChaves decriptográficas encontras:"
+            print "\tn = %s" % convertToHex(p)
+            print "\td = %s" % convertToHex(d)
         print "\nIniciando decriptação"
         for i in fileSplit(open(fileToDecrypt)):
             itupled = i.split("|")
@@ -423,6 +454,7 @@ def decryption(decryptionMethod, fileToDecrypt):
             it.append(int(itupled[0]))
             it.append(int(itupled[1]))
             fileDecrypted.write(chr(decryptionElGamal(it, p, d)))
+    print "\nNome do arquivo %s" % (fileDecrypted.name)
 
 def signatureFile(signatureMethod):
     something = 0
