@@ -18,15 +18,13 @@ import sys
 # @Arg3 -> Valor do módulo
 # @Arg4 -> Resto (padrão/inicial
 # @Return -> Resultado da exponenciação modular
-def expMod(b,e,m):
+def expMod(base, exp, mod):
     rest = 1
-    while(e != 0):
-        if(e % 2 == 0):
-            e /= 2
-        else:
-            e = (e-1)/2
-            rest = (rest*b) % m
-        b = (b*b) % m
+    while exp:
+        if exp & 1:
+            rest = rest * base % mod
+        exp >>= 1
+        base = base * base % mod
     return rest
 
 # @Brief MDC
@@ -303,7 +301,7 @@ def signature(filename, p, g, a):
         k = randint(2,p-2)
 
     #Calculando o inverso de K
-    ki = getInverse(k, p-1)
+    ki = getInverse(k, p-1) % (p-1)
     
     arq = open(filename, 'rb')
     # Pegando o hash da mensagem em formato hexadecimal...
@@ -314,7 +312,7 @@ def signature(filename, p, g, a):
     r = expMod(g, k, p)
 
     # Calculando S
-    s = (ki * (h - a*r)) % p-1
+    s = (ki * (h - a*r)) % (p-1)
 
     # Retornando a assinatura R e S
     return (r, s)
@@ -634,4 +632,3 @@ def menuBash():
         print "O programa será encerrado por falta de argumentos"
 
 menuBash()
-
